@@ -1,5 +1,5 @@
 const Discord = require("discord.js")
-const TOKEN = "ODk3OTI1NTUwNTk5OTcwODY4.YWcwVQ.bIsPEKkf3upA-B8tOpf3awdbbKg"
+require("dotenv").config()
 const client = new Discord.Client({
     intents:  [
         "GUILDS",
@@ -40,4 +40,4 @@ client.on("ready", async () => {
 
 module.exports = bot
 
-client.login(TOKEN)
+client.login(process.env.TOKEN)
