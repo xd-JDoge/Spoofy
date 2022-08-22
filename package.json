@@ -1,14 +1,19 @@
 {
-  "name": "doge",
+  "name": "spoofy",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
+  "description": "",
   "dependencies": {
-    "discord.js": "^13.6.0"
+    "ascii-table": "^0.0.9",
+    "discord.js": "^14.1.1",
+    "dotenv": "^16.0.1",
+    "mongoose": "^6.5.0",
+    "nodemon": "^2.0.19"
   }
 }

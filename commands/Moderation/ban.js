@@ -1,22 +1,38 @@
-module.exports = {
-    name: "ban",
-    category: "Moderation",
-    permissions: [],
-    devOnly: false,
-    run: async ({client, message, args}) => {
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
 
-        let role = message.guild.roles.cache.find(r => r.name === "Moderator")
-        const member = message.mentions.users.first()
-            if (message.members.roles.cache.some(r => r.name === "Moderator")) {
-                if (member) {
-                    const memberTarget = message.guild.members.cache.get(member.id)
-                    memberTarget.ban()
-                    message.reply("User has been banned!")
-                } else {
-                    message.reply("Failed to ban user!")
-                }
-            } else {
-                message.reply("You don't have the correct permissions!")
-            }
-    } 
+module.exports = {
+    data: new SlashCommandBuilder()
+    .setName('ban')
+    .setDescription('Bans a user')
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+    .addUserOption(option => option.setName('user').setDescription('The user'))
+    .addStringOption(option => option.setName('reason').setDescription('Reason for banning')),
+    /**
+     * 
+     * @param {ChatInputCommandInteraction} interaction 
+     */
+    async execute(interaction) {
+        const guild = interaction.guild
+        const member = interaction.options.getUser('user')
+        const reason = interaction.options.getString('reason')
+
+        await guild.bans.create(member, {reason})
+        .then(() => {
+            const LogChannel = guild.channels.cache.get('1003418838387400764')
+            const BanEmbed = new EmbedBuilder()
+            .setTitle("<a:check:949722884576792596> Member Banned!")
+            .setColor("Green")
+            .setDescription(`<:blankspace:945334317603758090><a:arrow:945334977464262776> **Member:** <@${member.id}>\n <:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n <:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
+            const BanLogEmbed = new EmbedBuilder()
+            .setTitle('<a:check:949722884576792596> Member Banned!')
+            .setColor('Green')
+            .setDescription(`<:blankspace:945334317603758090><a:arrow:945334977464262776> **Member:** <@${member.id}>\n <:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n <:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
+            const BanDMEmbed = new EmbedBuilder()
+            .setColor('Green')
+            .setDescription(`<a:check:949722884576792596> **<@${target.id}> You have been banned from ${guild} ~~what an idiot~~**\n\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
+            interaction.reply({embeds: [BanEmbed]})
+            LogChannel.send({embeds: [BanLogEmbed]})
+            member.send({embeds: [BanDMEmbed]})
+        })
+    }
 }
