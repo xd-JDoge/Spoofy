@@ -1,67 +1,156 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
-const GuildSettings = require('../../Models/GuildSettings')
+const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client, PermissionFlagsBits } = require('discord.js')
+const DB = require('../../Models/Modlogs')
+const GS = require('../../Models/GuildSettings')
+const Model = require('../../Models/Statics')
+const Model2 = require('../../Models/Blacklist')
+const ms = require('ms')
+const emote = require('../../config.json')
 
 module.exports = {
     data: new SlashCommandBuilder()
     .setName('timeout')
     .setDescription('Timeout a member')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addUserOption(option => option.setName('user').setDescription('The user').setRequired(true))
     .addStringOption(option => option.setName('reason').setDescription('The reason').setRequired(true))
-    .addNumberOption(option => option.setName('duration').setDescription('The duration').setRequired(true).addChoices(
-        {name: '15 minutes', value: 15 * 60 * 1000},
-        {name: '30 minutes', value: 30 * 60 * 1000},
-        {name: '1 hour', value: 60 * 60 * 1000},
-        {name: '3 hours', value: 3 * 60 * 60 * 1000},
-        {name: '6 hours', value: 6 * 60 * 60 * 1000},
-    )),
+    .addStringOption(option => option.setName('duration').setDescription('The duration').setRequired(true)),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     * @param {ChatInputCommandInteraction} interaction
+     * @param {Client} client  
      */
-    async execute(interaction) {
-        const guild = interaction.guild
-        const member = interaction.options.getMember('user')
-        const reason = interaction.options.getString('reason')
-        const duration = interaction.options.getNumber('duration')
+    async execute(interaction, client) {
+        const User = await Model2.findOne({UserID: interaction.member.id})
+        const Guild = await Model2.findOne({GuildID: interaction.guild.id})
 
-        const guildSettings = await GuildSettings.findOne({ GuildID: guild.id })
+        if(Guild?.GuildID === interaction.guild.id){
+            const embed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} This guild is blacklisted for the following reason: \`${Guild.Reason}\`\n${emote.blank}${emote.blank}${emote.arrow} If you think this is a mistake, contact the Support Server`)
+                .setColor("Red")
+            interaction.reply({embeds: [embed]}).then().catch(err => {
+                if(err) console.log(err)
+            })
+            return    
+        }
 
-        if(!guildSettings && !guildSettings.Modlogs) {
+        if(User?.UserID === interaction.member.id){
+            const embed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Your account is blacklisted for the following reason: \`${User.Reason}\`\n${emote.blank}${emote.blank}${emote.arrow} If you think this is a mistake, contact the Support Server`)
+                .setColor("Red")
+            interaction.reply({embeds: [embed]}).then().catch(err => {
+                if(err) console.log(err)
+            })
             return
         }
 
-        if(!interaction.member.permissions.has(PermissionFlagsBits.ModerateMembers)){
-            const PermEmbed = new EmbedBuilder()
-            .setDescription("<a:deny:949724643089072209> **Unexpected Error!** \n<:blankspace:945334317603758090><a:arrow:945334977464262776> You do not have the `MODERATE_MEMBERS` permission!")
-            .setColor("Red")
-            interaction.reply({embeds: [PermEmbed]})
-        } else {
+        const guild = interaction.guild
+        const member = interaction.options.getMember('user')
+        const reason = interaction.options.getString('reason')
+        const duration = interaction.options.getString('duration')
+        const TimeoutDate = new Date(interaction.createdAt).toLocaleDateString()
+
+        const settings = await GS.findOne({GuildID: interaction.guild.id})
+        const Statics = await Model.findOne({GuildID: interaction.guild.id})
+
+        if(interaction.member.id === interaction.guild.ownerId || interaction.member.id === Statics.Owner1 || interaction.member.id === Statics.Owner2 || interaction.member.id === Statics.Owner3 || interaction.member.id === Statics.Owner4 || interaction.member.id === Statics.Owner5){
+            if(!interaction.guild.members.resolve(client.user).permissions.has(PermissionFlagsBits.ModerateMembers)){
+                const errorEmbed = new EmbedBuilder()
+                    .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Missing Required Permission\n${emote.blank}${emote.blank}${emote.arrow} \`Moderate Members\``)
+                    .setColor("Red")
+                interaction.reply({embeds: [errorEmbed]})
+                return     
+            }
             if(!member){
                 const MemberEmbed = new EmbedBuilder()
-                .setDescription("<a:deny:949724643089072209> **Unexpected Error!** \n<:blankspace:945334317603758090><a:arrow:945334977464262776> You did not specify a member for me to timeout!")
-                .setColor("Red")
+                    .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Invalid Member`)
+                    .setColor('Red')
                 interaction.reply({embeds: [MemberEmbed]})
-            } else {
-                await member.timeout(duration, reason)
-                .then(() => {
-                    const LogChannel = guild.channels.cache.get(guildSettings.Modlogs)
-                    const TimeoutEmbed = new EmbedBuilder()
-                    .setTitle("<a:check:949722884576792596> Member Timed Out!")
-                    .setColor("Green")
-                    .setDescription(`<:blankspace:945334317603758090><a:arrow:945334977464262776> **Member:** ${member}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Duration:** <t:${duration}:R>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
-                    const TimeoutLogEmbed = new EmbedBuilder()
-                    .setTitle('<a:check:949722884576792596> Member Timed Out!')
-                    .setColor('Green')
-                    .setDescription(`<:blankspace:945334317603758090><a:arrow:945334977464262776> **Member:** ${member}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Duration:** <t:${duration}:R>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
-                    const TimeoutDMEmbed = new EmbedBuilder()
-                    .setColor('Green')
-                    .setDescription(`<a:check:949722884576792596> **${member} You have been timed out in ${guild}**\n\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Duration:** <t:${duration}:R>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Reason:** ${reason}\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Moderator:** ${interaction.member}`)
-                    interaction.reply({embeds: [TimeoutEmbed]})
-                    LogChannel.send({embeds: [TimeoutLogEmbed]})
-                    member.send({embeds: [TimeoutDMEmbed]})
-                })
+                return    
             }
+            if(member.manageable === false || interaction.member.id === Statics.Owner1 || interaction.member.id === Statics.Owner2 || interaction.member.id === Statics.Owner3 || interaction.member.id === Statics.Owner4 || interaction.member.id === Statics.Owner5 || member.roles.has(Statics.AdminRole) || member.roles.has(Statics.ModRole)){
+                const ImmuneEmbed = new EmbedBuilder()
+                    .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Member Immune`)
+                    .setColor('Red')
+                interaction.reply({embeds: [ImmuneEmbed]})
+                return
+            }
+            if(!ms(duration) || ms(duration) > ms('28d')){
+                const TimeEmbed = new EmbedBuilder()
+                    .setDescription(`${emote.deny} **Unexpected Error** \n${emote.blank}${emote.arrow} Invalid Duration\n${emote.blank}${emote.blank}${emote.arrow} Duration must be between 10s and 28d`)
+                    .setColor('Red')
+                interaction.reply({embeds: [TimeEmbed]})
+            }
+            if(!settings.Modlogs){
+                const NoLog = new EmbedBuilder()
+                    .setColor('Red')
+                    .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Modlogs channel not set`)
+                interaction.reply({embeds: [NoLog]})
+                return
+            }
+            DB.findOne({GuildID: guild.id, UserID: member.id, Reason: reason, Type: 'Timeout'}, (err, data) => {
+                if(err){
+                    console.log(err)
+                    const ErrorEmbed = new EmbedBuilder()
+                        .setDescription(`${emote.deny} **Unexpected Error**\n ${emote.blank}${emote.arrow} Database Issue\n${emote.blank}${emote.blank}${emote.arrow} Contact the Support Server!`)
+                        .setColor("Red")
+                    interaction.reply({embeds: [ErrorEmbed]})
+                    return    
+                }
+                if(!data){
+                    data = new DB({
+                        GuildID: guild.id,
+                        UserID: member.id,
+                        Content: [
+                            {
+                                ModeratorID: interaction.member.id,
+                                ModeratorTag: interaction.member.tag,
+                                Reason: reason,
+                                Date: TimeoutDate,
+                                Type: 'Timeout'
+                            }
+                        ]
+                    })
+                } else {
+                    const obj = {
+                        ModeratorID: interaction.member.id,
+                        ModeratorTag: interaction.member.tag,
+                        Reason: reason,
+                        Date: TimeoutDate,
+                        Type: 'Timeout'
+                    }
+                    data.Content.push(obj)    
+                }
+                data.save(err => {
+                    if(err){
+                        console.log(err)
+                    }
+                })
+            })
+            await member.timeout(ms(duration), reason)
+            .then(() => {
+                const LogChannel = guild.channels.cache.get(settings.Modlogs)
+                const TimeoutEmbed = new EmbedBuilder()
+                    .setTitle(`${emote.check} Member Timed Out`)
+                    .setColor("Green")
+                    .setDescription(`${emote.blank}${emote.user} **Member:** ${member.user.tag}\n${emote.blank}${emote.blank}${emote.id} ID: ${member.id}\n${emote.blank}${emote.arrow} **Reason:** ${reason}\n${emote.blank}${emote.time} **Duration:** ${ms(ms(duration), {long: true})}\n${emote.blank}${emote.user} **Moderator:** ${interaction.member}\n${emote.blank}${emote.blank}${emote.id} ID: ${interaction.member.id}`)
+                const TimeoutDMEmbed = new EmbedBuilder()
+                    .setColor('Green')
+                    .setDescription(`**${member.user.tag}** You have been timed out in **${guild}**\n\n${emote.blank}${emote.time} **Duration:** ${ms(ms(duration), {long: true})}\n${emote.blank}${emote.arrow} **Reason:** ${reason}`)
+                interaction.reply({embeds: [TimeoutEmbed]})
+                LogChannel.send({embeds: [TimeoutEmbed]})
+                member.send({embeds: [TimeoutDMEmbed]}).catch((err) => {
+                    console.log(err)
+                    return
+                })
+            })
+            return
+        }
+
+        if(!interaction.member.roles.cache.has(Statics.AdminRole) && !interaction.member.roles.cache.has(Statics.ModRole)){
+            const PermEmbed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error** \n${emote.blank}${emote.arrow} You need the \`Mod | 2\` rank to use this command`)
+                .setColor("Red")
+            interaction.reply({embeds: [PermEmbed]})    
+            return
         }
     }
 }

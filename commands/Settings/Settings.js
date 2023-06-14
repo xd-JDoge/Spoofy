@@ -1,94 +1,244 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
 const GuildSettings = require('../../Models/GuildSettings')
+const Model = require('../../Models/Statics')
+const Model2 = require('../../Models/Blacklist')
+const emote = require('../../config.json')
 
 module.exports = {
     data: new SlashCommandBuilder()
     .setName('settings')
-    .setDescription('View the server settings')
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDescription('View the settings')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
     /**
-     * 
      * @param {ChatInputCommandInteraction} interaction
      */
-    async execute(interaction) {
-        if(!interaction.member.permissions.has(PermissionFlagsBits.Administrator)){
-            const PermEmbed = new EmbedBuilder()
-            .setDescription("<a:deny:949724643089072209> **Unexpected Error!** \n<:blankspace:945334317603758090><a:arrow:945334977464262776> You do not have the `ADMINSTRATOR` permission!")
-            .setColor("Red")
-            interaction.reply({embeds: [PermEmbed]})
+    async execute(interaction){
+        const User = await Model2.findOne({UserID: interaction.member.id})
+        const Guild = await Model2.findOne({GuildID: interaction.guild.id})
+
+        if(Guild?.GuildID === interaction.guild.id){
+            const embed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} This guild is blacklisted for the following reason: \`${Guild.Reason}\`\n${emote.blank}${emote.blank}${emote.arrow} If you think this is a mistake, contact the Support Server`)
+                .setColor("Red")
+            interaction.reply({embeds: [embed]}).then().catch(err => {
+                if(err) console.log(err)
+            })
+            return    
         }
 
-        GuildSettings.findOne({ GuildID: interaction.guild.id}, (err, settings) => {
-            if(err){
-                console.log(err)
-                const ErrorEmbed = new EmbedBuilder()
-                .setTitle("Error")
-                .setDescription(`<a:deny:949724643089072209> **Unexpected Error!**\n <:blankspace:945334317603758090><a:arrow:945334977464262776> Could not set the modlog channel!`)
+        if(User?.UserID === interaction.member.id){
+            const embed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Your account is blacklisted for the following reason: \`${User.Reason}\`\n${emote.blank}${emote.blank}${emote.arrow} If you think this is a mistake, contact the Support Server`)
                 .setColor("Red")
-                interaction.reply({embeds: [ErrorEmbed]})
-                return    
-            }
+            interaction.reply({embeds: [embed]}).then().catch(err => {
+                if(err) console.log(err)
+            })
+            return
+        }
+        
+        const Statics = await Model.findOne({GuildID: interaction.guild.id})
+        if(interaction.member.id === interaction.guild.ownerId || interaction.member.id === Statics.Owner1 || interaction.member.id === Statics.Owner2 || interaction.member.id === Statics.Owner3 || interaction.member.id === Statics.Owner4 || interaction.member.id === Statics.Owner5 || interaction.member.roles.cache.has(Statics.AdminRole)){
+            GuildSettings.findOne({GuildID: interaction.guild.id}, (err, settings) => {
+                if(err){
+                    console.log(err)
+                    const ErrorEmbed = new EmbedBuilder()
+                        .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Database Issue\n${emote.blank}${emote.blank}${emote.arrow} Contact the Support Server!`)
+                        .setColor("Red")
+                    interaction.reply({embeds: [ErrorEmbed]})   
+                    return
+                }
+                if(!settings){
+                    const NoSettings = new EmbedBuilder()
+                        .setTitle(`${interaction.guild}'s Settings`)
+                        .setDescription(`**Ranks:**\n${emote.blank}${emote.user} **Owner:** \`None\`\n${emote.blank}${emote.role} **Admin:** \`No Role Found\`\n${emote.blank}${emote.role} **Mod:** \`No Role Found\`\n\n**Channels:**\n${emote.blank}${emote.channel} **Modlogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Strikelogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Joinlogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Leavelogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Messagelogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Channellogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Rolelogs:** \`No Channel Found\`\n${emote.blank}${emote.channel} **Suggestions:** \`No Channel Found\`\n\n**Systems:**\n${emote.blank}${emote.arrow} **Join/Leave:** \`Disabled\`\n${emote.blank}${emote.arrow} **Messagelogs:** \`Disabled\`\n${emote.blank}${emote.arrow} **Channellogs:** \`Disabled\`\n${emote.blank}${emote.arrow} **Rolelogs:** \`Disabled\`\n${emote.blank}${emote.arrow} **Suggestions:** \`Disabled\`\n${emote.blank}${emote.arrow} **Anti-Spam:** \`Disabled\``)
+                    interaction.reply({embeds: [NoSettings]})
+                    return
+                }
+                if(!Statics){
+                    const NoStatics = new EmbedBuilder()
+                        .setDescription(`${emote.deny} **Unexpected Error**\n${emote.blank}${emote.arrow} Must have at least one rank set in Ranks`)
+                    interaction.reply({embeds: [NoStatics]})
+                    return   
+                }
+                if(!Statics.Owner1){
+                    Owner1 = '`None`'
+                }
+                if(!Statics.Owner2){
+                    Owner2 = '`None`'
+                }
+                if(!Statics.Owner3){
+                    Owner3 = '`None`'
+                }
+                if(!Statics.Owner4){
+                    Owner4 = '`None`'
+                }
+                if(!Statics.Owner5){
+                    Owner5 = '`None`'
+                }
+                if(!Statics.AdminRole){
+                    AdminRole = '`No Role Found`'
+                }
+                if(!Statics.ModRole){
+                    ModRole = '`No Role Found`'
+                }
+                if(!settings.Modlogs){
+                    Modlogs = '`No Channel Found`'
+                }
+                if(!settings.Joinlogs){
+                    Joinlogs = '`No Channel Found`'
+                }
+                if(!settings.Leavelogs){
+                    Leavelogs = '`No Channel Found`'
+                }
+                if(!settings.JoinLeave){
+                    JoinLeave = '`Disabled`'
+                }
+                if(!settings.Messagelogs){
+                    Messagelogs = '`No Channel Found`'
+                }
+                if(!settings.MessagelogsSetting){
+                    MessagelogsSetting = '`Disabled`'
+                }
+                if(!settings.Channellogs){
+                    Channellogs = '`No Channel Found`'
+                }
+                if(!settings.ChannelLogSetting){
+                    ChannelLogSetting = '`Disabled`'
+                }
+                if(!settings.Rolelogs){
+                    Rolelogs = '`No Channel Found`'
+                }
+                if(!settings.RoleLogSetting){
+                    RoleLogSetting = '`Disabled`'
+                }
+                if(!settings.strikelogs){
+                    strikelogs = '`No Channel Found`'
+                }
+                if(!settings.SuggestionChannel){
+                    SuggestionChannel = '`No Channel Found`'
+                }
+                if(!settings.SuggestionSetting){
+                    SuggestionSetting = '`Disabled`'
+                }
+                if(!settings.antiSpam){
+                    antiSpam = '`Disabled`'
+                }
 
-            if(!settings){
-                const NoSettingsEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription('<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** `No Channel Found`\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** `No Channel Found`')
-                interaction.reply({embeds: [NoSettingsEmbed]})
+                if(Statics.Owner1){
+                    Owner1 = `<@${Statics.Owner1}>`
+                }
+                    if(Statics.Owner1 === 'None'){
+                        Owner1 = 'None'
+                    }
+                if(Statics.Owner2){
+                    Owner2 = `<@${Statics.Owner2}>`
+                }
+                    if(Statics.Owner2 === 'None'){
+                        Owner2 = 'None'
+                    }
+                if(Statics.Owner3){
+                    Owner3 = `<@${Statics.Owner3}>`
+                }
+                    if(Statics.Owner3 === 'None'){
+                        Owner3 = 'None'
+                    }
+                if(Statics.Owner4){
+                    Owner4 = `<@${Statics.Owner4}>`
+                }
+                    if(Statics.Owner4 === 'None'){
+                        Owner4 = 'None'
+                    }
+                if(Statics.Owner5){
+                    Owner5 = `<@${Statics.Owner5}>`
+                }
+                    if(Statics.Owner5 === 'None'){
+                        Owner5 = 'None'
+                    }
+                if(Statics.AdminRole){
+                    AdminRole = `<@&${Statics.AdminRole}>`
+                }
+                if(Statics.ModRole){
+                    ModRole = `<@&${Statics.ModRole}>`
+                }
+                if(settings.Modlogs){
+                    Modlogs = `<#${settings.Modlogs}>`
+                }
+                if(settings.Joinlogs){
+                    Joinlogs = `<#${settings.Joinlogs}>`
+                }
+                if(settings.Leavelogs){
+                    Leavelogs = `<#${settings.Leavelogs}>`
+                }
+                if(settings.Messagelogs){
+                    Messagelogs = `<#${settings.Messagelogs}>`
+                }
+                if(settings.Channellogs){
+                    Channellogs = `<#${settings.Channellogs}>`
+                }
+                if(settings.Rolelogs){
+                    Rolelogs = `<#${settings.Rolelogs}>`
+                }
+                if(settings.strikelogs){
+                    strikelogs = `<#${settings.strikelogs}>`
+                }
+                if(settings.SuggestionChannel){
+                    SuggestionChannel = `<#${settings.SuggestionChannel}>`
+                }
+    
+                if(settings.JoinLeave === true){
+                    JoinLeave = '`Enabled`'
+                }
+                if(settings.JoinLeave === false){
+                    JoinLeave = '`Disabled`'
+                }
+                if(settings.MessagelogsSetting === true){
+                    MessagelogsSetting = '`Enabled`'
+                }
+                if(settings.MessagelogsSetting === false){
+                    MessagelogsSetting = '`Disabled`'
+                }
+                if(settings.ChannelLogSetting === true){
+                    ChannelLogSetting = '`Enabled`'
+                }
+                if(settings.ChannelLogSetting === false){
+                    ChannelLogSetting = '`Disabled`'
+                }
+                if(settings.RoleLogSetting === true){
+                    RoleLogSetting = '`Enabled`'
+                }
+                if(settings.RoleLogSetting === false){
+                    RoleLogSetting = '`Disabled`'
+                }
+                if(settings.SuggestionSetting === true){
+                    SuggestionSetting = '`Enabled`'
+                }
+                if(settings.SuggestionSetting === false){
+                    SuggestionSetting = '`Disabled`'
+                }
+                if(settings.antiSpam === true){
+                    antiSpam = '`Enabled`'
+                }
+                if(settings.antiSpam === false){
+                    antiSpam = '`Disabled`'
+                }
+    
+                const SettingEmbed = new EmbedBuilder()
+                    .setTitle(`${interaction.guild}'s Settings`)
+                    .setDescription(`**Ranks:**\n${emote.blank}${emote.user} **Owner:** ${Owner1} | ${Owner2} | ${Owner3} | ${Owner4} | ${Owner5}\n${emote.blank}${emote.role} **Admin:** ${AdminRole}\n${emote.blank}${emote.role} **Mod:** ${ModRole}\n\n**Channels:**\n${emote.blank}${emote.channel} **Modlogs:** ${Modlogs}\n${emote.blank}${emote.channel} **Strikelogs:** ${strikelogs}\n${emote.blank}${emote.channel} **Joinlogs:** ${Joinlogs}\n${emote.blank}${emote.channel} **Leavelogs:** ${Leavelogs}\n${emote.blank}${emote.channel} **Messagelogs:** ${Messagelogs}\n${emote.blank}${emote.channel} **Channellogs:** ${Channellogs}\n${emote.blank}${emote.channel} **Rolelogs:**\n ${Rolelogs}\n${emote.blank}${emote.channel} **Suggestions:** ${SuggestionChannel}\n\n**Systems:**\n${emote.blank}${emote.arrow} **Join/Leave:** ${JoinLeave}\n${emote.blank}${emote.arrow} **Messagelogs:** ${MessagelogsSetting}\n${emote.blank}${emote.arrow} **Channellogs:** ${ChannelLogSetting}\n${emote.blank}${emote.arrow} **Rolelogs:** ${RoleLogSetting}\n${emote.blank}${emote.arrow} **Suggestions:** ${SuggestionSetting}\n${emote.blank}${emote.arrow} **Anti-Spam:** ${antiSpam}`)
+                interaction.reply({embeds: [SettingEmbed]}).then().catch(err => {
+                    if(err) console.log(err)
+                })
                 return
-            }
-            
-            if(!settings.Modlogs){
-                const NoModlogsEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** No Channel Found\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** <#${settings.Spoofylogs}>\n\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** <@&${settings.JailedRole}>`)
-                interaction.reply({embeds: [NoModlogsEmbed]})
-                return    
-            }
-
-            if(!settings.Spoofylogs){
-                const NoSpoofylogsEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** <#${settings.Modlogs}>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** No Channel Found\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** <@&${settings.JailedRole}>`)
-                interaction.reply({embeds: [NoSpoofylogsEmbed]})
-                return
-            }
-
-            if(!settings.JailedRole){
-                const NoJailedRoleEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** <#${settings.Modlogs}>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** <#${settings.Spoofylogs}>\n\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** No Role Found`)
-                interaction.reply({embeds: [NoJailedRoleEmbed]})
-                return
-            }
-
-            if(!settings.Modlogs && !settings.Spoofylogs){
-                const NoModSpoofyEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** No Channel Found\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** No Channel Found\n\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** <@&${settings.JailedRole}>`)
-                interaction.reply({embeds: [NoModSpoofyEmbed]})
-                return
-            }
-
-            if(!settings.Modlogs && !settings.JailedRole){
-                const NoModJailedEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** No Channel Found\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** <#${settings.Spoofylogs}>\n\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** No Role Found`)
-                interaction.reply({embeds: [NoModJailedEmbed]})
-                return
-            }
-
-            if(!settings.Spoofylogs && !settings.JailedRole){
-                const NoSpoofyJailedEmbed = new EmbedBuilder()
-                .setTitle(`${interaction.guild}'s Settings`)
-                .setDescription(`**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** <#${settings.Modlogs}>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** No Channel Found\n\n **Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** No Role Found`)
-                interaction.reply({embeds: [NoSpoofyJailedEmbed]})
-                return
-            }
-
-            const SettingsEmbed = new EmbedBuilder()
-            .setTitle(`${interaction.guild}'s Settings`)
-            .setDescription(`**Roles:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Jailed:** <@&${settings.JailedRole}>\n\n**Channels:**\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Modlogs:** <#${settings.Modlogs}>\n<:blankspace:945334317603758090><a:arrow:945334977464262776> **Spoofylogs:** <#${settings.Spoofylogs}>`)
-            interaction.reply({embeds: [SettingsEmbed]})
-        })
+            })
+            return    
+        }
+        
+        if(!interaction.member.roles.cache.has(Statics.AdminRole)){
+            const PermEmbed = new EmbedBuilder()
+                .setDescription(`${emote.deny} **Unexpected Error** \n${emote.blank}${emote.arrow} You need the \`Admin | 3\` rank to use this command`)
+                .setColor("Red")
+            interaction.reply({embeds: [PermEmbed]})
+            return
+        }
     }
 }

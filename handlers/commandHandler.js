@@ -28,7 +28,7 @@ function loadCommands(client) {
 
     developerGuild.commands.set(developerArray)
 
-    return console.log(table.toString(), "\n Loaded Commands")
+    return console.log(table.toString(), "\nLoaded Commands")
 }
 
 module.exports = { loadCommands }
