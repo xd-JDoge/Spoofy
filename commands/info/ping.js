@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client } = require('discord.js')
-const Model = require('../../Models/Blacklist')
-const Model2 = require('../../Models/Statics')
-const Model3 = require('../../Models/GuildSettings')
+const Model = require('../../models/blacklist')
+const Model2 = require('../../models/statics')
+const Model3 = require('../../models/guildSettings')
 const emote = require('../../config.json')
 const ms = require('ms')
 

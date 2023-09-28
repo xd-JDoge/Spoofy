@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js')
-const AFKSystem = require('../../Models/AFKSystem')
-const Model = require('../../Models/Blacklist')
-const Model2 = require('../../Models/GuildSettings')
+const afkSystem = require('../../models/afkSystem')
+const Model = require('../../models/blacklist')
+const Model2 = require('../../models/guildSettings')
 const emote = require('../../config.json')
 
 module.exports = {
@@ -49,12 +49,12 @@ module.exports = {
             try {
                 switch(options.getSubcommand()){
                     case 'set':{
-                        await AFKSystem.findOneAndUpdate({GuildID: guild.id, UserID: user.id}, {Status: AFKStatus, Time: parseInt(createdTimestamp/1000)}, {new: true, upsert: true})
+                        await afkSystem.findOneAndUpdate({GuildID: guild.id, UserID: user.id}, {Status: AFKStatus, Time: parseInt(createdTimestamp/1000)}, {new: true, upsert: true})
                         AFKEmbed.setColor('Green').setDescription(`${emote.blank}${emote.arrow} Status: \`${AFKStatus}\``)
                         return interaction.reply({embeds: [AFKEmbed]})
                     }
                     case 'remove':{
-                        await AFKSystem.findOneAndDelete({GuildID: guild.id, UserID: user.id})
+                        await afkSystem.findOneAndDelete({GuildID: guild.id, UserID: user.id})
                         AFKEmbed.setColor('Green').setDescription(`${emote.blank}${emote.arrow} Welcome back from being AFK!`)
                         return interaction.reply({embeds: [AFKEmbed]})
                     }

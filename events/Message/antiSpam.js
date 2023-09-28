@@ -1,6 +1,6 @@
 const { Message, Client, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
-const Model = require('../../Models/Statics')
-const Model2 = require('../../Models/GuildSettings')
+const Model = require('../../models/statics')
+const Model2 = require('../../models/guildSettings')
 const emote = require('../../config.json')
 const map = new Map()
 

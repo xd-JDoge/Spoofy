@@ -1,4 +1,4 @@
-const Database = require('./Config/Database')
+const Database = require('./config/database')
 const db = new Database
 db.connect()
 
@@ -6,8 +6,8 @@ const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js'
 const { Guilds, GuildMembers, GuildMessages, MessageContent } = GatewayIntentBits
 const { User, Message, GuildMember, ThreadMember } = Partials  
 
-const { loadEvents } = require('./Handlers/EventHandler')
-const { loadCommands } = require('./Handlers/CommandHandler')
+const { loadEvents } = require('./handlers/eventHandler')
+const { loadCommands } = require('./handlers/commandHandler')
 
 const client = new Client({ 
     intents: [Guilds, GuildMembers, GuildMessages, MessageContent],

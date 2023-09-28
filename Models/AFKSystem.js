@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
 
-const AFKSystemSchema = new mongoose.Schema({
+const afkSystemSchema = new mongoose.Schema({
     GuildID: String,
     UserID: String,
     Status: String,
     Time: String
 })
 
-module.exports = mongoose.model("AFKSystem", AFKSystemSchema)
+module.exports = mongoose.model("afkSystem", afkSystemSchema)

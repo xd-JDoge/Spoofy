@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } = require('discord.js')
 const { request } = require('undici')
-const Model = require('../../Models/LastFM')
-const Model2 = require('../../Models/Blacklist')
-const Model3 = require('../../Models/GuildSettings')
+const Model = require('../../models/lastfm')
+const Model2 = require('../../models/blacklist')
+const Model3 = require('../../models/guildSettings')
 const emote = require('../../config.json')
 const api = require('../../config.json')
 

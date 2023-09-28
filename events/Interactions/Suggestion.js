@@ -1,6 +1,6 @@
 const { MessageComponentInteraction, EmbedBuilder } = require('discord.js')
-const DB = require('../../Models/Statics')
-const Model = require('../../Models/Suggestions')
+const DB = require('../../models/statics')
+const Model = require('../../models/suggestions')
 const emote = require('../../config.json')
 
 module.exports = {

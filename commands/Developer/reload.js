@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client, ActivityType, PermissionFlagsBits } = require('discord.js')
-const { loadCommands } = require('../../Handlers/CommandHandler')
-const { loadEvents } = require('../../Handlers/EventHandler')
+const { SlashCommandBuilder, ChatInputCommandInteraction, Client, ActivityType, PermissionFlagsBits } = require('discord.js')
+const { loadCommands } = require('../../handlers/commandHandler')
+const { loadEvents } = require('../../handlers/eventHandler')
 
 module.exports = {
     developer: true,

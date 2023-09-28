@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const GuildSettingsSchema = new mongoose.Schema({
+const guildSettingsSchema = new mongoose.Schema({
     GuildID: String,
     Modlogs: String,
     MessagelogsSetting: Boolean,
@@ -19,4 +19,4 @@ const GuildSettingsSchema = new mongoose.Schema({
     antiSpam: Boolean,
 })
 
-module.exports = mongoose.model("GuildSettings", GuildSettingsSchema)
+module.exports = mongoose.model("guildSettings", guildSettingsSchema)

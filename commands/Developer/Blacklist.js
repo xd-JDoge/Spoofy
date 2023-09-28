@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, Client, PermissionFlagsBits } = require('discord.js')
 const axios = require('axios')
-const DB = require('../../Models/Blacklist')
+const DB = require('../../models/blacklist')
 const emote = require('../../config.json')
 const api = require('../../config.json')
 

@@ -1,5 +1,5 @@
 const { EmbedBuilder, GuildMember, Invite } = require('discord.js')
-const Model = require('../../Models/GuildSettings')
+const Model = require('../../models/guildSettings')
 const emote = require('../../config.json')
 
 module.exports = {

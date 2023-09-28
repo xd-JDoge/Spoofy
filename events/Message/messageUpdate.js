@@ -1,6 +1,6 @@
 const { Message, EmbedBuilder } = require('discord.js')
-const Model = require('../../Models/GuildSettings')
-const WhitelistDB = require('../../Models/Whitelist')
+const Model = require('../../models/guildSettings')
+const WhitelistDB = require('../../models/whitelist')
 const emote = require('../../config.json')
 
 module.exports = {

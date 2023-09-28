@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
-const GuildSettings = require('../../Models/GuildSettings')
-const Model = require('../../Models/Statics')
-const Model2 = require('../../Models/Blacklist')
+const guildSettings = require('../../models/guildSettings')
+const Model = require('../../models/statics')
+const Model2 = require('../../models/blacklist')
 const emote = require('../../config.json')
 
 module.exports = {
@@ -38,7 +38,7 @@ module.exports = {
         
         const Statics = await Model.findOne({GuildID: interaction.guild.id})
         if(interaction.member.id === interaction.guild.ownerId || interaction.member.id === Statics.Owner1 || interaction.member.id === Statics.Owner2 || interaction.member.id === Statics.Owner3 || interaction.member.id === Statics.Owner4 || interaction.member.id === Statics.Owner5 || interaction.member.roles.cache.has(Statics.AdminRole)){
-            GuildSettings.findOne({GuildID: interaction.guild.id}, (err, settings) => {
+            guildSettings.findOne({GuildID: interaction.guild.id}, (err, settings) => {
                 if(err){
                     console.log(err)
                     const ErrorEmbed = new EmbedBuilder()

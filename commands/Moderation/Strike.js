@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } = require('discord.js')
-const DB = require('../../Models/Strikes')
-const Model = require('../../Models/Statics')
-const Model2 = require('../../Models/Blacklist')
-const Model3 = require('../../Models/GuildSettings')
+const DB = require('../../models/Strikes')
+const Model = require('../../models/statics')
+const Model2 = require('../../models/blacklist')
+const Model3 = require('../../models/guildSettings')
 const emote = require('../../config.json')
 
 module.exports = {
